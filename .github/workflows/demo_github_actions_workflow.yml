@@ -1,0 +1,38 @@
+name: "Demo - test whether a reusable module is publication-ready"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  job_1:
+    runs-on: "ubuntu-latest"
+    name: "First job.  Adjacent jobs run in parallel by default."
+    steps:
+      - id: "checkout_repo"
+        name: "Checkout this repo"
+        uses: "actions/checkout@v1"
+      - id: "install_terraform"
+        name: "Install the Terraform CLI"
+        uses: "hashicorp/setup-terraform@v3"
+        with:
+          terraform_version: "1.13.5"
+      - id: "run_terraform_test"
+        name: "Test the module"
+        run: "${{ github.workspace }}/.cicd_pipeline_helpers/run_something_like_this_to_tf_test.ps1"
+        shell: "pwsh"
+        working-directory: "${{ github.workspace }}"
+      - id: "beautify_terraform_test_results"
+        name: "Beautify the Terraform Test execution results"
+        uses: "mikepenz/action-junit-report@v5"
+        if: (!cancelled())
+        with:
+          report_paths: |
+            ${{ github.workspace }}/.ignoreme/test-results/tf-test-results.xml
+          job_summary: true
+          include_passed: true
+          detailed_summary: true
+          check_annotations: false
+          comment: false
+          skip_annotations: true
